@@ -11,6 +11,10 @@ clean:
 	go clean
 	rm ${BINARY_NAME}
 
+.PHONY: test
+test:
+	go test ./... -race -cover .
+
 .PHONY: lint
 lint:
 	golangci-lint run
