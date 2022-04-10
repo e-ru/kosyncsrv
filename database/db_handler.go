@@ -5,7 +5,7 @@ import (
 )
 
 type DBHandler interface {
-	InitDatabase() error
+	InitDatabase(schemaUser, schemaDocument string) error
 }
 
 type sqlxDBHandler struct {
@@ -20,14 +20,14 @@ func NewDBHandler(
 	}
 }
 
-func (s *sqlxDBHandler) InitDatabase() error {
-	res := s.db.MustExec("SELECT *")
+func (s *sqlxDBHandler) InitDatabase(schemaUser, schemaDocument string) error {
+	res := s.db.MustExec(schemaUser)
 	_, err := res.LastInsertId()
 	if err != nil {
 		return err
 	}
 
-	res = s.db.MustExec("SELECT * ")
+	res = s.db.MustExec(schemaDocument)
 	_, err = res.RowsAffected()
 	if err != nil {
 		return err
