@@ -1,13 +1,11 @@
 package database
 
 import (
-	"database/sql"
-	"fmt"
 	"kosyncsrv/types"
 )
 
 type DBHandler interface {
-	InitDatabase() sql.Result
+	InitDatabase() error
 }
 
 type sqlxDBHandler struct {
@@ -22,13 +20,18 @@ func NewDBHandler(
 	}
 }
 
-func (s *sqlxDBHandler) InitDatabase() sql.Result {
-	res :=  s.db.MustExec("SELECT *")
-	s.db.MustExec("SELECT * ")
+func (s *sqlxDBHandler) InitDatabase() error {
+	res := s.db.MustExec("SELECT *")
+	_, err := res.LastInsertId()
+	if err != nil {
+		return err
+	}
 
-	fmt.Printf("res: %+v", res)
-	// s.db.MustExec(schemaUser)
-	// s.db.MustExec(schemaDocument)
+	res = s.db.MustExec("SELECT * ")
+	_, err = res.RowsAffected()
+	if err != nil {
+		return err
+	}
 
-	return res
+	return nil
 }
