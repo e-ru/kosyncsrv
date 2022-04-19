@@ -4,23 +4,23 @@ import (
 	"kosyncsrv/types"
 )
 
-type DBHandler interface {
+type DBService interface {
 	InitDatabase(schemaUser, schemaDocument string) error
 }
 
-type sqlxDBHandler struct {
+type sqlxDBService struct {
 	db types.DBApi
 }
 
-func NewDBHandler(
+func NewDBService(
 	db types.DBApi,
-) DBHandler {
-	return &sqlxDBHandler{
+) DBService {
+	return &sqlxDBService{
 		db: db,
 	}
 }
 
-func (s *sqlxDBHandler) InitDatabase(schemaUser, schemaDocument string) error {
+func (s *sqlxDBService) InitDatabase(schemaUser, schemaDocument string) error {
 	res := s.db.MustExec(schemaUser)
 	_, err := res.LastInsertId()
 	if err != nil {

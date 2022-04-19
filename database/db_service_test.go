@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func Test_DBHandler_InitDatabase(t *testing.T) {
+func Test_DBService_InitDatabase(t *testing.T) {
 	// GIVEN
 
 	testCases := []struct {
@@ -46,7 +46,7 @@ func Test_DBHandler_InitDatabase(t *testing.T) {
 			mockDb.On("MustExec", testCase.wantedSchemaUser).Return(test_types.TestResult{})
 			mockDb.On("MustExec", testCase.wantedSchemaDocument).Return(test_types.TestResult{})
 
-			dbHandler := database.NewDBHandler(mockDb)
+			dbHandler := database.NewDBService(mockDb)
 
 			// WHEN/THEN
 			if testCase.panics {

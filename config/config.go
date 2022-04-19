@@ -25,11 +25,11 @@ func NewConfiguration() (*Configuration, error) {
 	return cfg, nil
 }
 
-var DbHandlerFromConfig = func(config Configuration) (database.DBHandler, error) {
+var DbServiceFromConfig = func(config Configuration) (database.DBService, error) {
 	db, err := sqlx.Connect(config.DBDriverName, config.DBFileName)
 	if err != nil {
 		return nil, err
 	}
 
-	return database.NewDBHandler(db), nil
+	return database.NewDBService(db), nil
 }
