@@ -1,10 +1,11 @@
 package config
 
 import (
-	"kosyncsrv/database"
+	// "database/sql"
+	// "kosyncsrv/database"
 
 	"github.com/caarlos0/env"
-	"github.com/jmoiron/sqlx"
+	// "github.com/jmoiron/sqlx"
 )
 
 type Configuration struct {
@@ -25,11 +26,12 @@ func NewConfiguration() (*Configuration, error) {
 	return cfg, nil
 }
 
-var DbServiceFromConfig = func(config Configuration) (database.DBService, error) {
-	db, err := sqlx.Connect(config.DBDriverName, config.DBFileName)
-	if err != nil {
-		return nil, err
-	}
+// var DbServiceFromConfig = func(config Configuration) (database.DBService, error) {
+	
+// 	// db, err := sqlx.Connect(config.DBDriverName, config.DBFileName)
+// 	// if err != nil {
+// 	// 	return nil, err
+// 	// }
 
-	return database.NewDBService(db), nil
-}
+// 	// return database.NewDBService(db), nil
+// }

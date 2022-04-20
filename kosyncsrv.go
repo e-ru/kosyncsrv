@@ -1,9 +1,11 @@
 package main
 
 import (
+	"database/sql"
 	"flag"
 	"fmt"
 	"kosyncsrv/config"
+	"kosyncsrv/database"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -119,6 +121,16 @@ func main() {
 	}
 	fmt.Printf("config: %+v", config)
 
+	db, err := sql.Open("sqlite3", config.DBFileName)
+	if err != nil {
+		panic(err)
+	}
+	defer db.Close()
+
+	dbService := database.NewDBService(db)
+	dbService.InitDatabase(database.NewQueryBuilder().SchemaUser(), database.NewQueryBuilder().SchemaDocument())
+
+	db.Close()
 	dbfile := flag.String("d", "syncdata.db", "Sqlite3 DB file name")
 	dbname = *dbfile
 	srvhost := flag.String("t", "192.168.188.93", "Server host")
@@ -144,4 +156,8 @@ func main() {
 	} else {
 		router.Run(bindsrv)
 	}
+}
+
+func DbServiceFromConfig() {
+	panic("unimplemented")
 }
