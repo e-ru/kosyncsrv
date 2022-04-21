@@ -1,29 +1,31 @@
 package mocks
 
 import (
+	// "database/sql"
 	"database/sql"
 
 	"github.com/stretchr/testify/mock"
-	// "github.com/DATA-DOG/go-sqlmock"
-	// "github.com/jmoiron/sqlx"
-
 )
 
 type MockedDB struct {
-	// *sql.DB
 	mock.Mock
 }
 
-func (m *MockedDB) MustExec(query string, args ...interface{}) sql.Result {
-	calledArgs := m.Called(query)
-	return calledArgs.Get(0).(sql.Result)
+func (m *MockedDB) Begin() (*sql.Tx, error) {
+	args := m.Called()
+	if args.Get(0).(*sql.Tx) == nil {
+		return nil, args.Error(1)
+	} else {
+		return args.Get(0).(*sql.Tx), nil
+	}
 }
 
-// func (m *MockedDB) MustExec(query string, args ...interface{}) sql.Result {
-// 	calledArgs := m.Called(query)
-// 	return calledArgs.Get(0).(sql.Result)
-// }
+type MockSqlTx struct {
+	*sql.Tx
+	mock.Mock
+}
 
-func (m *MockedDB) Get(dest interface{}, query string, args ...interface{}) error {
-	return nil
+func (t *MockSqlTx) Commit() error {
+	args := t.Called()
+	return args.Error(0)
 }

@@ -2,6 +2,7 @@ package database
 
 import (
 	"database/sql"
+	"kosyncsrv/types"
 	// _ "github.com/mattn/go-sqlite3"
 )
 
@@ -9,15 +10,18 @@ type DBService interface {
 	InitDatabase(schemaUser, schemaDocument string) error
 }
 
-type sqlxDBService struct {
-	db *sql.DB
+type sqlDBService struct {
+	// db *sql.DB
+	dbClient types.SqlApi
 }
 
 func NewDBService(
-	db *sql.DB,
+	// db *sql.DB,
+	dbClient types.SqlApi,
 ) DBService {
-	return &sqlxDBService{
-		db: db,
+	return &sqlDBService{
+		// db: db,
+		dbClient: dbClient,
 	}
 }
 
@@ -34,8 +38,8 @@ func execStatement(tx *sql.Tx, cmd string) error {
 	return nil
 }
 
-func (s *sqlxDBService) InitDatabase(schemaUser, schemaDocument string) error {
-	tx, err := s.db.Begin()
+func (s *sqlDBService) InitDatabase(schemaUser, schemaDocument string) error {
+	tx, err := s.dbClient.Begin()
 	if err != nil {
 		return err
 	}
@@ -48,41 +52,4 @@ func (s *sqlxDBService) InitDatabase(schemaUser, schemaDocument string) error {
 		return err
 	}
 	return nil
-	// tx, err := s.db.Begin()
-	// if err != nil {
-	// 	return err
-	// }
-	// defer func() {
-	// 	switch err {
-	// 	case nil:
-	// 		err = tx.Commit()
-	// 	default:
-	// 		tx.Rollback()
-	// 	}
-	// }()
-
-	// res, err := tx.Exec(schemaUser)
-	// fmt.Printf("res: %+v", res)
-	// if err != nil {
-	// 	return err
-	// }
-
-	// return nil
-	// if _, err := s.db.Exec(schemaDocument); err != nil {
-	// 	panic(err)
-	// }
-
-	// res := s.db.MustExec(schemaUser)
-	// _, err := res.LastInsertId()
-	// if err != nil {
-	// 	return err
-	// }
-
-	// res = s.db.MustExec(schemaDocument)
-	// _, err = res.RowsAffected()
-	// if err != nil {
-	// 	return err
-	// }
-
-	// return nil
 }

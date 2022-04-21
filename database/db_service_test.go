@@ -1,7 +1,11 @@
 package database_test
 
 import (
+	"database/sql"
+	"errors"
 	"kosyncsrv/database"
+	"kosyncsrv/test/mocks"
+
 	// test_types "kosyncsrv/test/types"
 
 	"testing"
@@ -11,63 +15,49 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// func Test_DBService_InitDatabase(t *testing.T) {
-// 	// GIVEN
+func Test_DBService_InitDatabase_Begin_Fails(t *testing.T) {
+	// GIVEN
+	userSchema := database.NewQueryBuilder().SchemaUser()
+	docSchema := database.NewQueryBuilder().SchemaDocument()
 
-// 	testCases := []struct {
-// 		name                 string
-// 		wantedSchemaUser     string
-// 		wantedSchemaDocument string
-// 		passedSchemaUser     string
-// 		passedSchemaDocument string
-// 		panics               bool
-// 	}{
-// 		{
-// 			name:                 "InitDatabase panics with wrong init statements",
-// 			wantedSchemaUser:     "SELECT *",
-// 			wantedSchemaDocument: "SELECT *",
-// 			passedSchemaUser:     "SELECT *",
-// 			passedSchemaDocument: "SELECT * ",
-// 			panics:               true,
-// 		},
-// 		{
-// 			name:                 "InitDatabase doesn't panic with correct init statements",
-// 			wantedSchemaUser:     "SELECT *",
-// 			wantedSchemaDocument: "SELECT *",
-// 			passedSchemaUser:     "SELECT *",
-// 			passedSchemaDocument: "SELECT *",
-// 			panics:               false,
-// 		},
-// 	}
+	var tx *sql.Tx
+	mockDbApi := new(mocks.MockedDB)
+	mockDbApi.On("Begin").Return(tx, errors.New("Could not begin transaction"))
 
-// 	for _, testCase := range testCases {
-// 		t.Run(testCase.name, func(t *testing.T) {
-// 			mockDb := new(mocks.MockedDB)
+	dbService := database.NewDBService(mockDbApi)
+	
+	// WHEN
+	err := dbService.InitDatabase(userSchema, docSchema)
 
-// 			mockDb.On("MustExec", testCase.wantedSchemaUser).Return(test_types.TestResult{})
-// 			mockDb.On("MustExec", testCase.wantedSchemaDocument).Return(test_types.TestResult{})
+	// THEN
+	mockDbApi.AssertExpectations(t)
 
-// 			dbHandler := database.NewDBService(mockDb)
+	assert.EqualError(t, err, "Could not begin transaction")
+}
 
-// 			// WHEN/THEN
-// 			if testCase.panics {
-// 				assert.Panics(
-// 					t,
-// 					func() { dbHandler.InitDatabase(testCase.passedSchemaUser, testCase.passedSchemaDocument) },
-// 					"The code did not panic",
-// 				)
-// 			} else {
-// 				assert.NotPanics(
-// 					t,
-// 					func() { dbHandler.InitDatabase(testCase.passedSchemaUser, testCase.passedSchemaDocument) },
-// 					"The code did panic",
-// 				)
-// 				mockDb.AssertExpectations(t)
-// 			}
-// 		})
-// 	}
+func Test_DBService_InitDatabase_Commit_Is_Called(t *testing.T) {
+	// GIVEN
+	userSchema := database.NewQueryBuilder().SchemaUser()
+	docSchema := database.NewQueryBuilder().SchemaDocument()
 
-// }
+	// var tx *sql.Tx
+	mockDbApi := new(mocks.MockedDB)
+	mockTx := new(mocks.MockSqlTx)
+	mockDbApi.On("Begin").Return(mockTx, nil)
+	mockTx.On("Commit").Return(nil)
+
+	dbService := database.NewDBService(mockDbApi)
+	
+	// WHEN
+	err := dbService.InitDatabase(userSchema, docSchema)
+
+	// THEN
+	mockDbApi.AssertExpectations(t)
+	mockTx.AssertExpectations(t)
+
+	assert.NoError(t, err)
+}
+
 
 func Test_DBService_InitDatabase(t *testing.T) {
 	// GIVEN
@@ -86,8 +76,6 @@ func Test_DBService_InitDatabase(t *testing.T) {
 	ep.ExpectExec().WillReturnResult(sqlmock.NewResult(1,1))
 	ep = mock.ExpectPrepare(docSchema)
 	ep.ExpectExec().WillReturnResult(sqlmock.NewResult(1,1))
-	// mock.ExpectExec(userSchema).WillReturnResult(sqlmock.NewResult(1,1))
-	// mock.ExpectExec(docSchema).WillReturnResult(sqlmock.NewResult(1,1))
 	mock.ExpectCommit()
 
 	dbService := database.NewDBService(db)
