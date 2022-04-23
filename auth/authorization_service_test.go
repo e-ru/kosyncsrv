@@ -3,6 +3,7 @@ package auth_test
 import (
 	"kosyncsrv/auth"
 	"kosyncsrv/test/mocks"
+	"kosyncsrv/types"
 
 	"testing"
 
@@ -13,7 +14,7 @@ func ptrString(str string) *string {
 	return &str
 }
 
-func Test_Auth_Service_Register_User_New_User(t *testing.T) {
+func Test_Auth_Service_Register_User(t *testing.T) {
 	// GIVEN
 	username := "username"
 	password := "password"
@@ -48,6 +49,41 @@ func Test_Auth_Service_Register_User_New_User(t *testing.T) {
 				assert.False(t, success)
 				assert.Equal(t, *testcase.retFailureMsg, msg)
 			}
+		})
+	}
+}
+
+func Test_Auth_Service_Authorize_User(t *testing.T) {
+	// GIVEN
+	username := "username"
+	password := "password"
+
+	testcases := []struct {
+		name          string
+		userExists    bool
+		user          *types.User
+		retCode       types.AuthReturnCode
+		retMsg *string
+	}{
+		{name: "Authorize User Successful", userExists: true, user: &types.User{Username: username, Password: password}, retCode: types.Allowed, retMsg: ptrString(username)},
+		{name: "Authorize User Forbidden", userExists: false, retCode: types.Forbidden, retMsg: ptrString(username)},
+		{name: "Authorize User Unauthorized", userExists: true, user: &types.User{Username: username, Password: "foo"}, retCode: types.Unauthorized, retMsg: ptrString(username)},
+	}
+
+	for _, testcase := range testcases {
+		t.Run(testcase.name, func(t *testing.T) {
+			repo := new(mocks.MockedRepo)
+			repo.On("GetUser", username).Return(testcase.user, testcase.userExists)
+
+			// WHEN
+			authService := auth.NewAuthService(repo)
+			returnCode, msg := authService.AuthorizeUser(username, password)
+
+			// THEN
+			repo.AssertExpectations(t)
+
+			assert.Equal(t, testcase.retCode, returnCode)
+			assert.Equal(t, *testcase.retMsg, msg)
 		})
 	}
 }

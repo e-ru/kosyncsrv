@@ -18,6 +18,14 @@ func (a *authService) RegisterUser(username, password string) (bool, string) {
 	}
 }
 
-func (a *authService) AuthorizeUser() {
+func (a *authService) AuthorizeUser(username, password string) (types.AuthReturnCode, string) {
+	user, userExists := a.repo.GetUser(username)
 
+	if !userExists {
+		return types.Forbidden, username
+	}
+	if password != user.Password {
+		return types.Unauthorized, username
+	}
+	return types.Allowed, username
 }

@@ -45,3 +45,8 @@ func (s *sqlRepo) InitDatabase(schemaUser, schemaDocument string) error {
 func (s *sqlRepo) AddUser(username, password string) bool {
 	return false
 }
+
+func (s *sqlRepo) GetUser(username string) (*types.User, bool) {
+	return nil, false
+}
+
