@@ -1,28 +1,16 @@
-package database
+package repo
 
 import (
 	"database/sql"
 	"kosyncsrv/types"
-	// _ "github.com/mattn/go-sqlite3"
 )
 
-type DBService interface {
-	InitDatabase(schemaUser, schemaDocument string) error
+type sqlRepo struct {
+	sqlClient types.SqlApi
 }
 
-type sqlDBService struct {
-	// db *sql.DB
-	dbClient types.SqlApi
-}
-
-func NewDBService(
-	// db *sql.DB,
-	dbClient types.SqlApi,
-) DBService {
-	return &sqlDBService{
-		// db: db,
-		dbClient: dbClient,
-	}
+func NewRepo(sqlClient types.SqlApi) types.Repo {
+	return &sqlRepo{sqlClient: sqlClient}
 }
 
 func execStatement(tx *sql.Tx, cmd string) error {
@@ -38,8 +26,8 @@ func execStatement(tx *sql.Tx, cmd string) error {
 	return nil
 }
 
-func (s *sqlDBService) InitDatabase(schemaUser, schemaDocument string) error {
-	tx, err := s.dbClient.Begin()
+func (s *sqlRepo) InitDatabase(schemaUser, schemaDocument string) error {
+	tx, err := s.sqlClient.Begin()
 	if err != nil {
 		return err
 	}
@@ -52,4 +40,8 @@ func (s *sqlDBService) InitDatabase(schemaUser, schemaDocument string) error {
 		return err
 	}
 	return nil
+}
+
+func (s *sqlRepo) AddUser(username, password string) bool {
+	return false
 }

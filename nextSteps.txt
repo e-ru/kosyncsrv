@@ -1,0 +1,4 @@
+dbService -> repo (abstracts db access)
+create new syncService (getProgress, updateProgress), NewSyncService(repo)
+NewAuthService(repo) (register, authorize)
+apiService (http related stuff), NewApiService(syncService, repo)

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"kosyncsrv/config"
 	"kosyncsrv/database"
+	"kosyncsrv/repo"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -127,8 +128,12 @@ func main() {
 	}
 	defer db.Close()
 
-	dbService := database.NewDBService(db)
-	dbService.InitDatabase(database.NewQueryBuilder().SchemaUser(), database.NewQueryBuilder().SchemaDocument())
+	repo := repo.NewRepo(db)
+	repo.InitDatabase(database.NewQueryBuilder().SchemaUser(), database.NewQueryBuilder().SchemaDocument())
+
+
+
+	// syncService := sync.NewSyncingService(repo)
 
 	db.Close()
 	dbfile := flag.String("d", "syncdata.db", "Sqlite3 DB file name")

@@ -1,18 +1,17 @@
 package mocks
 
 import (
-	// "database/sql"
 	"database/sql"
 
 	"github.com/stretchr/testify/mock"
 )
 
-type MockedDB struct {
+type MockedSql struct {
 	mock.Mock
 }
 
-func (m *MockedDB) Begin() (*sql.Tx, error) {
-	args := m.Called()
+func (ms *MockedSql) Begin() (*sql.Tx, error) {
+	args := ms.Called()
 	if args.Get(0).(*sql.Tx) == nil {
 		return nil, args.Error(1)
 	} else {
@@ -20,12 +19,16 @@ func (m *MockedDB) Begin() (*sql.Tx, error) {
 	}
 }
 
-type MockSqlTx struct {
-	*sql.Tx
+type MockedRepo struct {
 	mock.Mock
 }
 
-func (t *MockSqlTx) Commit() error {
-	args := t.Called()
+func (mr *MockedRepo) InitDatabase(schemaUser, schemaDocument string) error {
+	args := mr.Called()
 	return args.Error(0)
+}
+
+func (mr *MockedRepo) AddUser(username, password string) bool {
+	args := mr.Called(username, password)
+	return args.Get(0).(bool)
 }

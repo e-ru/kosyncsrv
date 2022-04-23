@@ -1,9 +1,10 @@
-package database_test
+package repo_test
 
 import (
 	"database/sql"
 	"errors"
 	"kosyncsrv/database"
+	"kosyncsrv/repo"
 	"kosyncsrv/test/mocks"
 
 	// test_types "kosyncsrv/test/types"
@@ -21,43 +22,19 @@ func Test_DBService_InitDatabase_Begin_Fails(t *testing.T) {
 	docSchema := database.NewQueryBuilder().SchemaDocument()
 
 	var tx *sql.Tx
-	mockDbApi := new(mocks.MockedDB)
-	mockDbApi.On("Begin").Return(tx, errors.New("Could not begin transaction"))
+	mockSqlApi := new(mocks.MockedSql)
+	mockSqlApi.On("Begin").Return(tx, errors.New("Could not begin transaction"))
 
-	dbService := database.NewDBService(mockDbApi)
+	repo := repo.NewRepo(mockSqlApi)
 	
 	// WHEN
-	err := dbService.InitDatabase(userSchema, docSchema)
+	err := repo.InitDatabase(userSchema, docSchema)
 
 	// THEN
-	mockDbApi.AssertExpectations(t)
+	mockSqlApi.AssertExpectations(t)
 
 	assert.EqualError(t, err, "Could not begin transaction")
 }
-
-func Test_DBService_InitDatabase_Commit_Is_Called(t *testing.T) {
-	// GIVEN
-	userSchema := database.NewQueryBuilder().SchemaUser()
-	docSchema := database.NewQueryBuilder().SchemaDocument()
-
-	// var tx *sql.Tx
-	mockDbApi := new(mocks.MockedDB)
-	mockTx := new(mocks.MockSqlTx)
-	mockDbApi.On("Begin").Return(mockTx, nil)
-	mockTx.On("Commit").Return(nil)
-
-	dbService := database.NewDBService(mockDbApi)
-	
-	// WHEN
-	err := dbService.InitDatabase(userSchema, docSchema)
-
-	// THEN
-	mockDbApi.AssertExpectations(t)
-	mockTx.AssertExpectations(t)
-
-	assert.NoError(t, err)
-}
-
 
 func Test_DBService_InitDatabase(t *testing.T) {
 	// GIVEN
@@ -78,8 +55,8 @@ func Test_DBService_InitDatabase(t *testing.T) {
 	ep.ExpectExec().WillReturnResult(sqlmock.NewResult(1,1))
 	mock.ExpectCommit()
 
-	dbService := database.NewDBService(db)
-	err = dbService.InitDatabase(userSchema, docSchema)
+	repo := repo.NewRepo(db)
+	err = repo.InitDatabase(userSchema, docSchema)
 
 	assert.Nil(t, err)
 }
