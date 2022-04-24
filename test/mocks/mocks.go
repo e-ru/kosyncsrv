@@ -39,7 +39,12 @@ func (mr *MockedRepo) GetUser(username string) (*types.User, bool) {
 	return args.Get(0).(*types.User), args.Get(1).(bool)
 }
 
-func (mr *MockedRepo) AuthorizeUser(username, password string) (types.AuthReturnCode, string) {
-	args := mr.Called(username, password)
-	return args.Get(0).(types.AuthReturnCode), args.Get(1).(string)
+func (mr *MockedRepo) GetDocumentPosition(username, documentId string) (*types.DocumentPosition, error) {
+	args := mr.Called(username, documentId)
+	return args.Get(0).(*types.DocumentPosition), args.Error(1)
 }
+
+// func (mr *MockedRepo) AuthorizeUser(username, password string) (types.AuthReturnCode, string) {
+// 	args := mr.Called(username, password)
+// 	return args.Get(0).(types.AuthReturnCode), args.Get(1).(string)
+// }

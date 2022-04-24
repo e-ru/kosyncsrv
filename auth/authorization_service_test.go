@@ -3,16 +3,13 @@ package auth_test
 import (
 	"kosyncsrv/auth"
 	"kosyncsrv/test/mocks"
+	"kosyncsrv/test/utils"
 	"kosyncsrv/types"
 
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
-
-func ptrString(str string) *string {
-	return &str
-}
 
 func Test_Auth_Service_Register_User(t *testing.T) {
 	// GIVEN
@@ -26,8 +23,8 @@ func Test_Auth_Service_Register_User(t *testing.T) {
 		retFailureMsg *string
 		wantSuccess   bool
 	}{
-		{name: "New User Successful", retSuccess: true, retSuccessMsg: ptrString(username), wantSuccess: true},
-		{name: "New User Unsuccessful", retSuccess: false, retFailureMsg: ptrString("User already exists"), wantSuccess: false},
+		{name: "New User Successful", retSuccess: true, retSuccessMsg: utils.PtrString(username), wantSuccess: true},
+		{name: "New User Unsuccessful", retSuccess: false, retFailureMsg: utils.PtrString("User already exists"), wantSuccess: false},
 	}
 
 	for _, testcase := range testcases {
@@ -65,9 +62,9 @@ func Test_Auth_Service_Authorize_User(t *testing.T) {
 		retCode       types.AuthReturnCode
 		retMsg *string
 	}{
-		{name: "Authorize User Successful", userExists: true, user: &types.User{Username: username, Password: password}, retCode: types.Allowed, retMsg: ptrString(username)},
-		{name: "Authorize User Forbidden", userExists: false, retCode: types.Forbidden, retMsg: ptrString(username)},
-		{name: "Authorize User Unauthorized", userExists: true, user: &types.User{Username: username, Password: "foo"}, retCode: types.Unauthorized, retMsg: ptrString(username)},
+		{name: "Authorize User Successful", userExists: true, user: &types.User{Username: username, Password: password}, retCode: types.Allowed, retMsg: utils.PtrString(username)},
+		{name: "Authorize User Forbidden", userExists: false, retCode: types.Forbidden, retMsg: utils.PtrString(username)},
+		{name: "Authorize User Unauthorized", userExists: true, user: &types.User{Username: username, Password: "foo"}, retCode: types.Unauthorized, retMsg: utils.PtrString(username)},
 	}
 
 	for _, testcase := range testcases {

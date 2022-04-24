@@ -50,3 +50,6 @@ func (s *sqlRepo) GetUser(username string) (*types.User, bool) {
 	return nil, false
 }
 
+func (mr *sqlRepo) GetDocumentPosition(username, documentId string) (*types.DocumentPosition, error) {
+	return nil, nil
+}
