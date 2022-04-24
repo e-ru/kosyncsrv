@@ -53,3 +53,8 @@ func (s *sqlRepo) GetUser(username string) (*types.User, bool) {
 func (mr *sqlRepo) GetDocumentPosition(username, documentId string) (*types.DocumentPosition, error) {
 	return nil, nil
 }
+
+func (mr *sqlRepo) UpdateDocumentPosition(username string, documentPosition *types.DocumentPosition) (*int64, error) {
+	timestamp := int64(0)
+	return &timestamp, nil
+}

@@ -18,6 +18,10 @@ func (s *syncingService) GetProgress(username, documentId string) (*types.Docume
 	return ret, nil
 }
 
-func (s *syncingService) UpdateProgress() {
-	
+func (s *syncingService) UpdateProgress(username string, documentPosition *types.DocumentPosition) (*int64, error) {
+	timestamp, err := s.repo.UpdateDocumentPosition(username, documentPosition)
+	if err != nil {
+		return nil, err
+	}
+	return timestamp, nil
 }
