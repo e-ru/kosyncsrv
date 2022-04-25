@@ -2,7 +2,9 @@ package repo
 
 import (
 	"database/sql"
+	"kosyncsrv/database"
 	"kosyncsrv/types"
+	"log"
 )
 
 type sqlRepo struct {
@@ -32,8 +34,14 @@ func (s *sqlRepo) InitDatabase(schemaUser, schemaDocument string) error {
 		return err
 	}
 	defer tx.Rollback()
-	execStatement(tx, schemaUser)
-	execStatement(tx, schemaDocument)
+	err = execStatement(tx, schemaUser)
+	if err != nil {
+		return err
+	}
+	err = execStatement(tx, schemaDocument)
+	if err != nil {
+		return err
+	}
 
 	err = tx.Commit()
 	if err != nil {
@@ -42,8 +50,27 @@ func (s *sqlRepo) InitDatabase(schemaUser, schemaDocument string) error {
 	return nil
 }
 
-func (s *sqlRepo) AddUser(username, password string) bool {
-	return false
+func (s *sqlRepo) AddUser(username, password string) error {
+	tx, err := s.sqlClient.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+	stmt, err := tx.Prepare(database.NewQueryBuilder().AddUser())
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer stmt.Close()
+	_, err = stmt.Exec(username, password)
+	if err != nil {
+		return err
+	}
+	err = tx.Commit()
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (s *sqlRepo) GetUser(username string) (*types.User, bool) {

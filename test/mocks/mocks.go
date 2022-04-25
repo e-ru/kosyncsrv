@@ -29,9 +29,9 @@ func (mr *MockedRepo) InitDatabase(schemaUser, schemaDocument string) error {
 	return args.Error(0)
 }
 
-func (mr *MockedRepo) AddUser(username, password string) bool {
+func (mr *MockedRepo) AddUser(username, password string) error {
 	args := mr.Called(username, password)
-	return args.Get(0).(bool)
+	return args.Error(0)
 }
 
 func (mr *MockedRepo) GetUser(username string) (*types.User, bool) {

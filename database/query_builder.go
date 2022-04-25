@@ -3,6 +3,7 @@ package database
 type QueryBuilder interface {
 	SchemaUser() string
 	SchemaDocument() string
+	AddUser() string
 }
 
 type sqlite3QueryBuilder struct {
@@ -33,4 +34,8 @@ CREATE TABLE IF NOT EXISTS "document" (
 	"timestamp"  INTEGER
 );
 `
+}
+
+func (q *sqlite3QueryBuilder) AddUser() string {
+	return `INSERT INTO user (username, password) VALUES ($1, $2)`
 }

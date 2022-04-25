@@ -1,6 +1,10 @@
 package auth
 
-import "kosyncsrv/types"
+import (
+	"errors"
+	"kosyncsrv/types"
+	"log"
+)
 
 type authService struct {
 	repo types.Repo
@@ -10,11 +14,14 @@ func NewAuthService(repo types.Repo) types.AuthorizationService {
 	return &authService{repo: repo}
 }
 
-func (a *authService) RegisterUser(username, password string) (bool, string) {
-	if success := a.repo.AddUser(username, password); success {
-		return success, username
+func (a *authService) RegisterUser(username, password string) (error, *string) {
+	log.Printf("Register user. Username: %+v", username)
+
+	if err := a.repo.AddUser(username, password); err != nil {
+		log.Printf("Could not register user. Error: %+v", err)
+		return errors.New("Could not register user. PLease check the logs for more details"), nil
 	} else {
-		return success, "User already exists"
+		return nil, &username
 	}
 }
 
