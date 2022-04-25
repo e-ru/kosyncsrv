@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"kosyncsrv/database"
 	"kosyncsrv/types"
-	"log"
 )
 
 type sqlRepo struct {
@@ -15,13 +14,17 @@ func NewRepo(sqlClient types.SqlApi) types.Repo {
 	return &sqlRepo{sqlClient: sqlClient}
 }
 
-func execStatement(tx *sql.Tx, cmd string) error {
+func execStatement(tx *sql.Tx, cmd string, args ...any) error {
 	stmtUser, err := tx.Prepare(cmd)
 	if err != nil {
 		return err
 	}
 	defer stmtUser.Close()
-	_, err = stmtUser.Exec()
+	if len(args) > 0 {
+		_, err = stmtUser.Exec(args...)
+	} else {
+		_, err = stmtUser.Exec()
+	}
 	if err != nil {
 		return err
 	}
@@ -56,12 +59,7 @@ func (s *sqlRepo) AddUser(username, password string) error {
 		return err
 	}
 	defer tx.Rollback()
-	stmt, err := tx.Prepare(database.NewQueryBuilder().AddUser())
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer stmt.Close()
-	_, err = stmt.Exec(username, password)
+	err = execStatement(tx, database.NewQueryBuilder().AddUser(), username, password)
 	if err != nil {
 		return err
 	}
