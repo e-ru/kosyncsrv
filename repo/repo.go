@@ -2,6 +2,7 @@ package repo
 
 import (
 	"database/sql"
+	"fmt"
 	"kosyncsrv/types"
 )
 
@@ -78,7 +79,36 @@ func (s *sqlRepo) AddUser(username, password string) error {
 }
 
 func (s *sqlRepo) GetUser(username string) (*types.User, error) {
-	return nil, nil
+	tx, err := s.sqlClient.Begin()
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback()
+	stmt, err := tx.Prepare(s.queryBuilder.GetUser())
+	if err != nil {
+		return nil, err
+	}
+	defer stmt.Close()
+	row, err := stmt.Query(username)
+	if err != nil {
+		return nil, err
+	}
+	defer row.Close()
+	var user types.User
+	row.Next()
+	if err := row.Scan(&user.Username, &user.Password); err != nil {
+		if err == sql.ErrNoRows {
+			return nil, fmt.Errorf("No such User: %+v", username)
+		}
+		return nil, err
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		return nil, err
+	}
+
+	return &user, nil
 }
 
 func (mr *sqlRepo) GetDocumentPosition(username, documentId string) (*types.DocumentPosition, error) {
