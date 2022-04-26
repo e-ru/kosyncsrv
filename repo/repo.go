@@ -15,15 +15,15 @@ func NewRepo(sqlClient types.SqlApi) types.Repo {
 }
 
 func execStatement(tx *sql.Tx, cmd string, args ...any) error {
-	stmtUser, err := tx.Prepare(cmd)
+	stmt, err := tx.Prepare(cmd)
 	if err != nil {
 		return err
 	}
-	defer stmtUser.Close()
+	defer stmt.Close()
 	if len(args) > 0 {
-		_, err = stmtUser.Exec(args...)
+		_, err = stmt.Exec(args...)
 	} else {
-		_, err = stmtUser.Exec()
+		_, err = stmt.Exec()
 	}
 	if err != nil {
 		return err
@@ -71,8 +71,8 @@ func (s *sqlRepo) AddUser(username, password string) error {
 	return nil
 }
 
-func (s *sqlRepo) GetUser(username string) (*types.User, bool) {
-	return nil, false
+func (s *sqlRepo) GetUser(username string) (*types.User, error) {
+	return nil, nil
 }
 
 func (mr *sqlRepo) GetDocumentPosition(username, documentId string) (*types.DocumentPosition, error) {

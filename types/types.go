@@ -73,7 +73,7 @@ type SqlApi interface {
 type Repo interface {
 	InitDatabase(schemaUser, schemaDocument string) error // doesn't belong to repo...
 	AddUser(username, password string) error
-	GetUser(username string) (*User, bool)
+	GetUser(username string) (*User, error)
 	GetDocumentPosition(username, documentId string) (*DocumentPosition, error)
 	UpdateDocumentPosition(username string, documentPosition *DocumentPosition) (*int64, error)
 }
@@ -88,7 +88,7 @@ const (
 
 type AuthorizationService interface {
 	RegisterUser(username, password string) (error, *string)
-	AuthorizeUser(username, password string) (AuthReturnCode, string)
+	AuthorizeUser(username, password string) AuthReturnCode
 }
 
 type SyncingService interface {

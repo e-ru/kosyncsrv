@@ -34,9 +34,9 @@ func (mr *MockedRepo) AddUser(username, password string) error {
 	return args.Error(0)
 }
 
-func (mr *MockedRepo) GetUser(username string) (*types.User, bool) {
+func (mr *MockedRepo) GetUser(username string) (*types.User, error) {
 	args := mr.Called(username)
-	return args.Get(0).(*types.User), args.Get(1).(bool)
+	return args.Get(0).(*types.User), args.Error(1)
 }
 
 func (mr *MockedRepo) GetDocumentPosition(username, documentId string) (*types.DocumentPosition, error) {

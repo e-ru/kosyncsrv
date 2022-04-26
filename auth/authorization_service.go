@@ -25,14 +25,17 @@ func (a *authService) RegisterUser(username, password string) (error, *string) {
 	}
 }
 
-func (a *authService) AuthorizeUser(username, password string) (types.AuthReturnCode, string) {
-	user, userExists := a.repo.GetUser(username)
+func (a *authService) AuthorizeUser(username, password string) types.AuthReturnCode {
+	log.Printf("Authorize User: %+v", username)
 
-	if !userExists {
-		return types.Forbidden, username
+	user, err := a.repo.GetUser(username)
+	if err != nil {
+		log.Printf("Could not get User: %+v. Error: %+v", username, err)
+		return types.Forbidden
 	}
 	if password != user.Password {
-		return types.Unauthorized, username
+		log.Printf("Invalid Password for User: %+v.", username)
+		return types.Unauthorized
 	}
-	return types.Allowed, username
+	return types.Allowed
 }

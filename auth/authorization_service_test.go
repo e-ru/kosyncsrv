@@ -44,11 +44,6 @@ func Test_Auth_Service_Register_User(t *testing.T) {
 			} else {
 				assert.Equal(t, testcase.retSuccessMsg, msg)
 			}
-			// if testcase.wantSuccess {
-			// 	assert.NoError(t, err)
-			// } else {
-			// 	assert.Error(t, err, "Could not create user. Error: Db error")
-			// }
 		})
 	}
 }
@@ -60,30 +55,28 @@ func Test_Auth_Service_Authorize_User(t *testing.T) {
 
 	testcases := []struct {
 		name       string
-		userExists bool
+		err error
 		user       *types.User
 		retCode    types.AuthReturnCode
-		retMsg     *string
 	}{
-		{name: "Authorize User Successful", userExists: true, user: &types.User{Username: username, Password: password}, retCode: types.Allowed, retMsg: utils.PtrString(username)},
-		{name: "Authorize User Forbidden", userExists: false, retCode: types.Forbidden, retMsg: utils.PtrString(username)},
-		{name: "Authorize User Unauthorized", userExists: true, user: &types.User{Username: username, Password: "foo"}, retCode: types.Unauthorized, retMsg: utils.PtrString(username)},
+		{name: "Authorize User Successful", user: &types.User{Username: username, Password: password}, retCode: types.Allowed},
+		{name: "Authorize User Forbidden", err: errors.New("User not found"), retCode: types.Forbidden},
+		{name: "Authorize User Unauthorized", user: &types.User{Username: username, Password: "foo"}, retCode: types.Unauthorized},
 	}
 
 	for _, testcase := range testcases {
 		t.Run(testcase.name, func(t *testing.T) {
 			repo := new(mocks.MockedRepo)
-			repo.On("GetUser", username).Return(testcase.user, testcase.userExists)
+			repo.On("GetUser", username).Return(testcase.user, testcase.err)
 
 			// WHEN
 			authService := auth.NewAuthService(repo)
-			returnCode, msg := authService.AuthorizeUser(username, password)
+			authType := authService.AuthorizeUser(username, password)
 
 			// THEN
 			repo.AssertExpectations(t)
 
-			assert.Equal(t, testcase.retCode, returnCode)
-			assert.Equal(t, *testcase.retMsg, msg)
+			assert.Equal(t, testcase.retCode, authType)
 		})
 	}
 }
