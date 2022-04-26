@@ -46,6 +46,11 @@ CREATE TABLE IF NOT EXISTS "document" (
 			expSql: "INSERT INTO user (username, password) VALUES ($1, $2)",
 			query: queryBuilder.AddUser,
 		},
+		{
+			name: "GetUser should return correct statement",
+			expSql: "SELECT * FROM user WHERE username=$1",
+			query: queryBuilder.GetUser,
+		},
 	}
 
 	for _, testCase := range testCases {

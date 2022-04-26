@@ -2,16 +2,22 @@ package repo
 
 import (
 	"database/sql"
-	"kosyncsrv/database"
 	"kosyncsrv/types"
 )
 
 type sqlRepo struct {
-	sqlClient types.SqlApi
+	sqlClient    types.SqlApi
+	queryBuilder types.QueryBuilder
 }
 
-func NewRepo(sqlClient types.SqlApi) types.Repo {
-	return &sqlRepo{sqlClient: sqlClient}
+func NewRepo(
+	sqlClient types.SqlApi,
+	queryBuilder types.QueryBuilder,
+) types.Repo {
+	return &sqlRepo{
+		sqlClient:    sqlClient,
+		queryBuilder: queryBuilder,
+	}
 }
 
 func execStatement(tx *sql.Tx, cmd string, args ...any) error {
@@ -31,17 +37,17 @@ func execStatement(tx *sql.Tx, cmd string, args ...any) error {
 	return nil
 }
 
-func (s *sqlRepo) InitDatabase(schemaUser, schemaDocument string) error {
+func (s *sqlRepo) InitDatabase() error {
 	tx, err := s.sqlClient.Begin()
 	if err != nil {
 		return err
 	}
 	defer tx.Rollback()
-	err = execStatement(tx, schemaUser)
+	err = execStatement(tx, s.queryBuilder.SchemaUser())
 	if err != nil {
 		return err
 	}
-	err = execStatement(tx, schemaDocument)
+	err = execStatement(tx, s.queryBuilder.SchemaDocument())
 	if err != nil {
 		return err
 	}
@@ -59,7 +65,7 @@ func (s *sqlRepo) AddUser(username, password string) error {
 		return err
 	}
 	defer tx.Rollback()
-	err = execStatement(tx, database.NewQueryBuilder().AddUser(), username, password)
+	err = execStatement(tx, s.queryBuilder.AddUser(), username, password)
 	if err != nil {
 		return err
 	}

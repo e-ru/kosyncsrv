@@ -24,7 +24,7 @@ type MockedRepo struct {
 	mock.Mock
 }
 
-func (mr *MockedRepo) InitDatabase(schemaUser, schemaDocument string) error {
+func (mr *MockedRepo) InitDatabase() error {
 	args := mr.Called()
 	return args.Error(0)
 }

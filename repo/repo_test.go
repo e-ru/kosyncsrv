@@ -15,17 +15,14 @@ import (
 
 func Test_DBService_InitDatabase_Begin_Fails(t *testing.T) {
 	// GIVEN
-	userSchema := database.NewQueryBuilder().SchemaUser()
-	docSchema := database.NewQueryBuilder().SchemaDocument()
-
 	var tx *sql.Tx
 	mockSqlApi := new(mocks.MockedSql)
 	mockSqlApi.On("Begin").Return(tx, errors.New("Could not begin transaction"))
 
-	repo := repo.NewRepo(mockSqlApi)
+	repo := repo.NewRepo(mockSqlApi, database.NewQueryBuilder())
 
 	// WHEN
-	err := repo.InitDatabase(userSchema, docSchema)
+	err := repo.InitDatabase()
 
 	// THEN
 	mockSqlApi.AssertExpectations(t)
@@ -52,8 +49,8 @@ func Test_DBService_InitDatabase(t *testing.T) {
 	mock.ExpectCommit()
 
 	// WHEN
-	repo := repo.NewRepo(db)
-	err = repo.InitDatabase(userSchema, docSchema)
+	repo := repo.NewRepo(db, database.NewQueryBuilder())
+	err = repo.InitDatabase()
 
 	// THEN
 	if err := mock.ExpectationsWereMet(); err != nil {
@@ -96,7 +93,7 @@ func Test_DBService_Add_User(t *testing.T) {
 			}
 
 			// WHEN
-			repo := repo.NewRepo(db)
+			repo := repo.NewRepo(db, database.NewQueryBuilder())
 			if testcase.wantErr {
 				if err := repo.AddUser(username, password); err == nil {
 					t.Errorf("was expecting an error, but there was none")
@@ -114,4 +111,8 @@ func Test_DBService_Add_User(t *testing.T) {
 			assert.NoError(t, err)
 		})
 	}
+}
+
+func Test_DBService_Get_User(t *testing.T) {
+
 }

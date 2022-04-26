@@ -128,8 +128,8 @@ func main() {
 	}
 	defer db.Close()
 
-	repo := repo.NewRepo(db)
-	repo.InitDatabase(database.NewQueryBuilder().SchemaUser(), database.NewQueryBuilder().SchemaDocument())
+	repo := repo.NewRepo(db, database.NewQueryBuilder())
+	repo.InitDatabase()
 
 
 

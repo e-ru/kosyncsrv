@@ -1,15 +1,11 @@
 package database
 
-type QueryBuilder interface {
-	SchemaUser() string
-	SchemaDocument() string
-	AddUser() string
-}
+import "kosyncsrv/types"
 
 type sqlite3QueryBuilder struct {
 }
 
-func NewQueryBuilder() QueryBuilder {
+func NewQueryBuilder() types.QueryBuilder {
 	return &sqlite3QueryBuilder{}
 }
 
@@ -38,4 +34,8 @@ CREATE TABLE IF NOT EXISTS "document" (
 
 func (q *sqlite3QueryBuilder) AddUser() string {
 	return `INSERT INTO user (username, password) VALUES ($1, $2)`
+}
+
+func (q *sqlite3QueryBuilder) GetUser() string {
+	return `SELECT * FROM user WHERE username=$1`
 }

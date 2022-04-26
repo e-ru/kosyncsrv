@@ -66,12 +66,19 @@ type RequestDocumentPosition struct {
 	DeviceID   string  `json:"device_id"`
 }
 
+type QueryBuilder interface {
+	SchemaUser() string
+	SchemaDocument() string
+	AddUser() string
+	GetUser() string
+}
+
 type SqlApi interface {
 	Begin() (*sql.Tx, error)
 }
 
 type Repo interface {
-	InitDatabase(schemaUser, schemaDocument string) error // doesn't belong to repo...
+	InitDatabase() error // doesn't belong to repo...
 	AddUser(username, password string) error
 	GetUser(username string) (*User, error)
 	GetDocumentPosition(username, documentId string) (*DocumentPosition, error)
