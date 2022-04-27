@@ -21,93 +21,33 @@ func NewRepo(
 	}
 }
 
-func execStatement(tx *sql.Tx, cmd string, args ...any) error {
-	stmt, err := tx.Prepare(cmd)
-	if err != nil {
-		return err
-	}
-	defer stmt.Close()
-	if len(args) > 0 {
-		_, err = stmt.Exec(args...)
-	} else {
-		_, err = stmt.Exec()
-	}
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
 func (s *sqlRepo) InitDatabase() error {
-	tx, err := s.sqlClient.Begin()
-	if err != nil {
+	if _, err := s.sqlClient.Exec(s.queryBuilder.SchemaUser()); err != nil {
 		return err
 	}
-	defer tx.Rollback()
-	err = execStatement(tx, s.queryBuilder.SchemaUser())
-	if err != nil {
-		return err
-	}
-	err = execStatement(tx, s.queryBuilder.SchemaDocument())
-	if err != nil {
-		return err
-	}
-
-	err = tx.Commit()
-	if err != nil {
+	if _, err := s.sqlClient.Exec(s.queryBuilder.SchemaDocument()); err != nil {
 		return err
 	}
 	return nil
 }
 
 func (s *sqlRepo) AddUser(username, password string) error {
-	tx, err := s.sqlClient.Begin()
-	if err != nil {
+	if _, err := s.sqlClient.Exec(s.queryBuilder.AddUser(), username, password); err != nil {
 		return err
 	}
-	defer tx.Rollback()
-	err = execStatement(tx, s.queryBuilder.AddUser(), username, password)
-	if err != nil {
-		return err
-	}
-	err = tx.Commit()
-	if err != nil {
-		return err
-	}
-
 	return nil
 }
 
 func (s *sqlRepo) GetUser(username string) (*types.User, error) {
-	tx, err := s.sqlClient.Begin()
-	if err != nil {
-		return nil, err
-	}
-	defer tx.Rollback()
-	stmt, err := tx.Prepare(s.queryBuilder.GetUser())
-	if err != nil {
-		return nil, err
-	}
-	defer stmt.Close()
-	row, err := stmt.Query(username)
-	if err != nil {
-		return nil, err
-	}
-	defer row.Close()
 	var user types.User
-	row.Next()
+
+	row := s.sqlClient.QueryRow(s.queryBuilder.GetUser(), username)
 	if err := row.Scan(&user.Username, &user.Password); err != nil {
 		if err == sql.ErrNoRows {
 			return nil, fmt.Errorf("No such User: %+v", username)
 		}
 		return nil, err
 	}
-
-	err = tx.Commit()
-	if err != nil {
-		return nil, err
-	}
-
 	return &user, nil
 }
 

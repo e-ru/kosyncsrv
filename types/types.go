@@ -75,6 +75,8 @@ type QueryBuilder interface {
 
 type SqlApi interface {
 	Begin() (*sql.Tx, error)
+	Exec(query string, args ...any) (sql.Result, error)
+	QueryRow(query string, args ...any) *sql.Row
 }
 
 type Repo interface {

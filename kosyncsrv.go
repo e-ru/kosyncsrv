@@ -131,8 +131,6 @@ func main() {
 	repo := repo.NewRepo(db, database.NewQueryBuilder())
 	repo.InitDatabase()
 
-
-
 	// syncService := sync.NewSyncingService(repo)
 
 	db.Close()

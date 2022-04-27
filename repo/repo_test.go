@@ -1,11 +1,9 @@
 package repo_test
 
 import (
-	"database/sql"
 	"errors"
 	"kosyncsrv/database"
 	"kosyncsrv/repo"
-	"kosyncsrv/test/mocks"
 	"kosyncsrv/types"
 
 	"testing"
@@ -13,23 +11,6 @@ import (
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/stretchr/testify/assert"
 )
-
-func Test_DBService_InitDatabase_Begin_Fails(t *testing.T) {
-	// GIVEN
-	var tx *sql.Tx
-	mockSqlApi := new(mocks.MockedSql)
-	mockSqlApi.On("Begin").Return(tx, errors.New("Could not begin transaction"))
-
-	repo := repo.NewRepo(mockSqlApi, database.NewQueryBuilder())
-
-	// WHEN
-	err := repo.InitDatabase()
-
-	// THEN
-	mockSqlApi.AssertExpectations(t)
-
-	assert.EqualError(t, err, "Could not begin transaction")
-}
 
 func Test_DBService_InitDatabase(t *testing.T) {
 	// GIVEN
@@ -42,22 +23,19 @@ func Test_DBService_InitDatabase(t *testing.T) {
 	}
 	defer db.Close()
 
-	mock.ExpectBegin()
-	ep := mock.ExpectPrepare(userSchema)
-	ep.ExpectExec().WillReturnResult(sqlmock.NewResult(1, 1))
-	ep = mock.ExpectPrepare(docSchema)
-	ep.ExpectExec().WillReturnResult(sqlmock.NewResult(1, 1))
-	mock.ExpectCommit()
+	mock.ExpectExec(userSchema).WillReturnResult(sqlmock.NewResult(1, 1))
+	mock.ExpectExec(docSchema).WillReturnResult(sqlmock.NewResult(1, 1))
 
 	// WHEN
 	repo := repo.NewRepo(db, database.NewQueryBuilder())
 	err = repo.InitDatabase()
 
 	// THEN
+	assert.Nil(t, err)
+
 	if err := mock.ExpectationsWereMet(); err != nil {
 		t.Errorf("there were unfulfilled expectations: %s", err)
 	}
-	assert.Nil(t, err)
 }
 
 func Test_DBService_Add_User(t *testing.T) {
@@ -83,34 +61,31 @@ func Test_DBService_Add_User(t *testing.T) {
 			}
 			defer db.Close()
 
-			mock.ExpectBegin()
-			ep := mock.ExpectPrepare(testcase.query)
 			if testcase.wantErr {
-				ep.ExpectExec().WithArgs(username, password).WillReturnError(testcase.err)
-				mock.ExpectRollback()
+				mock.ExpectExec(testcase.query).WithArgs(username, password).WillReturnError(testcase.err)
 			} else {
-				ep.ExpectExec().WithArgs(username, password).WillReturnResult(sqlmock.NewResult(1, 1))
-				mock.ExpectCommit()
+				mock.ExpectExec(testcase.query).WithArgs(username, password).WillReturnResult(sqlmock.NewResult(1, 1))
 			}
 
-			// WHEN
 			repo := repo.NewRepo(db, database.NewQueryBuilder())
+
+			// WHEN
+			err = repo.AddUser(username, password)
+
+			// THEN
 			if testcase.wantErr {
-				if err := repo.AddUser(username, password); err == nil {
+				if err == nil {
 					t.Errorf("was expecting an error, but there was none")
 				}
 			} else {
-				if err := repo.AddUser(username, password); err != nil {
+				if err != nil {
 					t.Errorf("error was not expected while updating stats: %s", err)
 				}
 			}
 
-			// THEN
-			err = mock.ExpectationsWereMet()
-			if err != nil {
+			if err := mock.ExpectationsWereMet(); err != nil {
 				t.Errorf("there were unfulfilled expectations: %s", err)
 			}
-			assert.NoError(t, err)
 		})
 	}
 }
@@ -127,7 +102,7 @@ func Test_DBService_Get_User(t *testing.T) {
 		err     error
 		wantErr bool
 	}{
-		// {name: "get user successfully", query: database.NewQueryBuilder().GetUser(), user: &types.User{Username: username, Password: password}, wantErr: false},
+		{name: "get user successfully", query: database.NewQueryBuilder().GetUser(), user: &types.User{Username: username, Password: password}, wantErr: false},
 		{name: "get user unsuccessfully", query: database.NewQueryBuilder().GetUser(), err: errors.New("Could not get user"), wantErr: true},
 	}
 
@@ -139,21 +114,15 @@ func Test_DBService_Get_User(t *testing.T) {
 			}
 			defer db.Close()
 
-			mock.ExpectBegin()
-			ep := mock.ExpectPrepare(testcase.query)
 			if testcase.wantErr {
-				ep.ExpectQuery().WithArgs(username).WillReturnError(testcase.err)
-				mock.ExpectRollback()
+				mock.ExpectQuery(testcase.query).WithArgs(username).WillReturnError(testcase.err)
 			} else {
 				newRows := sqlmock.NewRows([]string{username, password}).AddRow(username, password)
-				eq := ep.ExpectQuery().WithArgs(username).WillReturnRows(newRows)
-				eq.WillReturnRows(newRows)
-				eq.RowsWillBeClosed()
-				mock.ExpectCommit()
+				mock.ExpectQuery(testcase.query).WithArgs(username).WillReturnRows(newRows)
 			}
+			repo := repo.NewRepo(db, database.NewQueryBuilder())
 
 			// WHEN
-			repo := repo.NewRepo(db, database.NewQueryBuilder())
 			user, err := repo.GetUser(username)
 
 			// THEN
@@ -168,11 +137,9 @@ func Test_DBService_Get_User(t *testing.T) {
 				assert.Equal(t, testcase.user, user)
 			}
 
-			err = mock.ExpectationsWereMet()
-			if err != nil {
+			if err := mock.ExpectationsWereMet(); err != nil {
 				t.Errorf("there were unfulfilled expectations: %s", err)
 			}
-			assert.NoError(t, err)
 		})
 	}
 }
