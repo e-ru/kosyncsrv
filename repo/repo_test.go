@@ -1,6 +1,7 @@
 package repo_test
 
 import (
+	"database/sql"
 	"errors"
 	"kosyncsrv/database"
 	"kosyncsrv/repo"
@@ -17,24 +18,53 @@ func Test_DBService_InitDatabase(t *testing.T) {
 	userSchema := database.NewQueryBuilder().SchemaUser()
 	docSchema := database.NewQueryBuilder().SchemaDocument()
 
-	db, mock, err := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
-	if err != nil {
-		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	testcases := []struct {
+		name       string
+		userSchema *string
+		docSchema  *string
+		err        error
+		wantErr    bool
+	}{
+		{name: "init db successfully", userSchema: &userSchema, docSchema: &docSchema, wantErr: false},
+		{name: "init db unsuccessfully", docSchema: &docSchema, err: errors.New("Could not create user table"), wantErr: true},
+		{name: "init db unsuccessfully", userSchema: &userSchema, err: errors.New("Could not create document table"), wantErr: true},
 	}
-	defer db.Close()
+	for _, testcase := range testcases {
+		t.Run(testcase.name, func(t *testing.T) {
+			db, mock, err := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
+			if err != nil {
+				t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+			}
+			defer db.Close()
 
-	mock.ExpectExec(userSchema).WillReturnResult(sqlmock.NewResult(1, 1))
-	mock.ExpectExec(docSchema).WillReturnResult(sqlmock.NewResult(1, 1))
+			if testcase.wantErr {
+				if testcase.userSchema == nil {
+					mock.ExpectExec(database.NewQueryBuilder().SchemaUser()).WillReturnError(testcase.err)
+				}
+				if testcase.docSchema == nil {
+					mock.ExpectExec(userSchema).WillReturnResult(sqlmock.NewResult(1, 1))
+					mock.ExpectExec(database.NewQueryBuilder().SchemaDocument()).WillReturnError(testcase.err)
+				}
+			} else {
+				mock.ExpectExec(userSchema).WillReturnResult(sqlmock.NewResult(1, 1))
+				mock.ExpectExec(docSchema).WillReturnResult(sqlmock.NewResult(1, 1))
+			}
 
-	// WHEN
-	repo := repo.NewRepo(db, database.NewQueryBuilder())
-	err = repo.InitDatabase()
+			// WHEN
+			repo := repo.NewRepo(db, database.NewQueryBuilder())
+			err = repo.InitDatabase()
 
-	// THEN
-	assert.Nil(t, err)
-
-	if err := mock.ExpectationsWereMet(); err != nil {
-		t.Errorf("there were unfulfilled expectations: %s", err)
+			// THEN
+			if testcase.wantErr {
+				assert.Error(t, testcase.err)
+			} else {
+				assert.Nil(t, err)
+			}
+			
+			if err := mock.ExpectationsWereMet(); err != nil {
+				t.Errorf("there were unfulfilled expectations: %s", err)
+			}
+		})
 	}
 }
 
@@ -104,6 +134,7 @@ func Test_DBService_Get_User(t *testing.T) {
 	}{
 		{name: "get user successfully", query: database.NewQueryBuilder().GetUser(), user: &types.User{Username: username, Password: password}, wantErr: false},
 		{name: "get user unsuccessfully", query: database.NewQueryBuilder().GetUser(), err: errors.New("Could not get user"), wantErr: true},
+		{name: "get user unsuccessfully no such user", query: database.NewQueryBuilder().GetUser(), err: sql.ErrNoRows, wantErr: true},
 	}
 
 	for _, testcase := range testcases {
