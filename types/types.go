@@ -8,11 +8,13 @@ type User struct {
 }
 
 type DocumentPosition struct {
+	Username string
 	DocumentID string
 	Percentage float64
 	Progress   string
 	Device     string
 	DeviceID   string
+	Timestamp int64
 }
 
 // type DocumentPosition interface {
@@ -23,20 +25,20 @@ type DocumentPosition struct {
 // 	GetDeviceID()   string
 // }
 
-type DbUser struct {
-	Username string `db:"username"`
-	Password string `db:"password"`
-}
+// type DbUser struct {
+// 	Username string `db:"username"`
+// 	Password string `db:"password"`
+// }
 
-type DbDocumentPosition struct {
-	Username   string  `db:"username"`
-	DocumentID string  `db:"documentid"`
-	Percentage float64 `db:"percentage"`
-	Progress   string  `db:"progress"`
-	Device     string  `db:"device"`
-	DeviceID   string  `db:"device_id"`
-	Timestamp  int64   `db:"timestamp"`
-}
+// type DbDocumentPosition struct {
+// 	Username   string  `db:"username"`
+// 	DocumentID string  `db:"documentid"`
+// 	Percentage float64 `db:"percentage"`
+// 	Progress   string  `db:"progress"`
+// 	Device     string  `db:"device"`
+// 	DeviceID   string  `db:"device_id"`
+// 	Timestamp  int64   `db:"timestamp"`
+// }
 
 // func (d *DbDocumentPosition) GetDocumentID() string {
 // 	return d.DocumentID
@@ -58,19 +60,21 @@ type DbDocumentPosition struct {
 // 	return d.DeviceID
 // }
 
-type RequestDocumentPosition struct {
-	DocumentID string  `json:"document"`
-	Percentage float64 `json:"percentage"`
-	Progress   string  `json:"progress"`
-	Device     string  `json:"device"`
-	DeviceID   string  `json:"device_id"`
-}
+// type RequestDocumentPosition struct {
+// 	DocumentID string  `json:"document"`
+// 	Percentage float64 `json:"percentage"`
+// 	Progress   string  `json:"progress"`
+// 	Device     string  `json:"device"`
+// 	DeviceID   string  `json:"device_id"`
+// }
 
 type QueryBuilder interface {
 	SchemaUser() string
 	SchemaDocument() string
 	AddUser() string
 	GetUser() string
+	DocumentExists() string
+	GetDocumentPosition() string
 }
 
 type SqlApi interface {

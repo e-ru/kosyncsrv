@@ -39,3 +39,11 @@ func (q *sqlite3QueryBuilder) AddUser() string {
 func (q *sqlite3QueryBuilder) GetUser() string {
 	return `SELECT * FROM user WHERE username=$1`
 }
+
+func (q *sqlite3QueryBuilder) DocumentExists() string {
+	return `SELECT * FROM document WHERE documentid=$1 AND device_id=$2`
+}
+
+func (q *sqlite3QueryBuilder) GetDocumentPosition() string {
+	return "SELECT * FROM document WHERE document.username=$1 AND document.documentid=$2 ORDER BY document.timestamp DESC"
+}

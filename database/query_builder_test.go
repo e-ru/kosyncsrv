@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func Test_QueryBuilder_UserSchema(t *testing.T) {
+func Test_QueryBuilder(t *testing.T) {
 	// GIVEN
 
 	queryBuilder := database.NewQueryBuilder()
@@ -42,14 +42,24 @@ CREATE TABLE IF NOT EXISTS "document" (
 			query: queryBuilder.SchemaDocument,
 		},
 		{
-			name: "AddUser should return correct statement",
+			name:   "AddUser should return correct statement",
 			expSql: "INSERT INTO user (username, password) VALUES ($1, $2)",
-			query: queryBuilder.AddUser,
+			query:  queryBuilder.AddUser,
 		},
 		{
-			name: "GetUser should return correct statement",
+			name:   "GetUser should return correct statement",
 			expSql: "SELECT * FROM user WHERE username=$1",
-			query: queryBuilder.GetUser,
+			query:  queryBuilder.GetUser,
+		},
+		{
+			name:   "DocumentExists should return correct statement",
+			expSql: "SELECT * FROM document WHERE documentid=$1 AND device_id=$2",
+			query:  queryBuilder.DocumentExists,
+		},
+		{
+			name:   "DocumentExists should return correct statement",
+			expSql: "SELECT * FROM document WHERE document.username=$1 AND document.documentid=$2 ORDER BY document.timestamp DESC",
+			query:  queryBuilder.GetDocumentPosition,
 		},
 	}
 
@@ -58,10 +68,10 @@ CREATE TABLE IF NOT EXISTS "document" (
 
 			// WHEN
 			sql := testCase.query()
-	
+
 			//THEN
 			assert.Equal(t, testCase.expSql, sql)
 		})
 	}
-	
+
 }

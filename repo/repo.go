@@ -59,8 +59,24 @@ func (s *sqlRepo) AddUser(username, password string) error {
 	return fmt.Errorf("Could not add User, error: %+v", err)
 }
 
-func (mr *sqlRepo) GetDocumentPosition(username, documentId string) (*types.DocumentPosition, error) {
-	return nil, nil
+func (s *sqlRepo) GetDocumentPosition(username, documentId string) (*types.DocumentPosition, error) {
+	log.Printf("Get document position - username: %+v, documentId: %+v", username, documentId)
+
+	var docPos types.DocumentPosition
+	row := s.sqlClient.QueryRow(s.queryBuilder.GetDocumentPosition(), username, documentId)
+	err := row.Scan(
+		&docPos.Username,
+		&docPos.DocumentID,
+		&docPos.Percentage,
+		&docPos.Progress,
+		&docPos.Device,
+		&docPos.DeviceID,
+		&docPos.Timestamp,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return &docPos, nil
 }
 
 func (mr *sqlRepo) UpdateDocumentPosition(username string, documentPosition *types.DocumentPosition) (*int64, error) {
