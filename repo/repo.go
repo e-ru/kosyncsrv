@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"kosyncsrv/types"
+	"log"
 )
 
 type sqlRepo struct {
@@ -31,24 +32,31 @@ func (s *sqlRepo) InitDatabase() error {
 	return nil
 }
 
-func (s *sqlRepo) AddUser(username, password string) error {
-	if _, err := s.sqlClient.Exec(s.queryBuilder.AddUser(), username, password); err != nil {
-		return err
-	}
-	return nil
-}
-
 func (s *sqlRepo) GetUser(username string) (*types.User, error) {
-	var user types.User
+	log.Printf("Get user: %+v", username)
 
+	var user types.User
 	row := s.sqlClient.QueryRow(s.queryBuilder.GetUser(), username)
 	if err := row.Scan(&user.Username, &user.Password); err != nil {
-		if err == sql.ErrNoRows {
-			return nil, fmt.Errorf("No such User: %+v", username)
-		}
+		log.Printf("Get user error: %+v", err)
 		return nil, err
 	}
 	return &user, nil
+}
+
+var getUser = (*sqlRepo).GetUser
+
+func (s *sqlRepo) AddUser(username, password string) error {
+	log.Printf("Add user: %+v", username)
+
+	_, err := getUser(s, username)
+	if err == sql.ErrNoRows {
+		if _, err := s.sqlClient.Exec(s.queryBuilder.AddUser(), username, password); err != nil {
+			return fmt.Errorf("Could not add User, error: %+v", err)
+		}
+		return nil
+	}
+	return fmt.Errorf("Could not add User, error: %+v", err)
 }
 
 func (mr *sqlRepo) GetDocumentPosition(username, documentId string) (*types.DocumentPosition, error) {

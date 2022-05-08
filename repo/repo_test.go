@@ -1,10 +1,11 @@
-package repo_test
+package repo // whitebox testing
 
 import (
 	"database/sql"
 	"errors"
 	"kosyncsrv/database"
-	"kosyncsrv/repo"
+
+	// "kosyncsrv/repo"
 	"kosyncsrv/types"
 
 	"testing"
@@ -51,7 +52,7 @@ func Test_DBService_InitDatabase(t *testing.T) {
 			}
 
 			// WHEN
-			repo := repo.NewRepo(db, database.NewQueryBuilder())
+			repo := NewRepo(db, database.NewQueryBuilder())
 			err = repo.InitDatabase()
 
 			// THEN
@@ -59,58 +60,6 @@ func Test_DBService_InitDatabase(t *testing.T) {
 				assert.Error(t, testcase.err)
 			} else {
 				assert.Nil(t, err)
-			}
-			
-			if err := mock.ExpectationsWereMet(); err != nil {
-				t.Errorf("there were unfulfilled expectations: %s", err)
-			}
-		})
-	}
-}
-
-func Test_DBService_Add_User(t *testing.T) {
-	// GIVEN
-	username := "username"
-	password := "password"
-
-	testcases := []struct {
-		name    string
-		query   string
-		err     error
-		wantErr bool
-	}{
-		{name: "add user successfully", query: database.NewQueryBuilder().AddUser(), wantErr: false},
-		{name: "add user unsuccessfully", query: database.NewQueryBuilder().AddUser(), err: errors.New("Could not add user"), wantErr: true},
-	}
-
-	for _, testcase := range testcases {
-		t.Run(testcase.name, func(t *testing.T) {
-			db, mock, err := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
-			if err != nil {
-				t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
-			}
-			defer db.Close()
-
-			if testcase.wantErr {
-				mock.ExpectExec(testcase.query).WithArgs(username, password).WillReturnError(testcase.err)
-			} else {
-				mock.ExpectExec(testcase.query).WithArgs(username, password).WillReturnResult(sqlmock.NewResult(1, 1))
-			}
-
-			repo := repo.NewRepo(db, database.NewQueryBuilder())
-
-			// WHEN
-			err = repo.AddUser(username, password)
-
-			// THEN
-			if testcase.wantErr {
-				if err == nil {
-					t.Errorf("was expecting an error, but there was none")
-				}
-			} else {
-				if err != nil {
-					t.Errorf("error was not expected while updating stats: %s", err)
-				}
 			}
 
 			if err := mock.ExpectationsWereMet(); err != nil {
@@ -151,7 +100,7 @@ func Test_DBService_Get_User(t *testing.T) {
 				newRows := sqlmock.NewRows([]string{username, password}).AddRow(username, password)
 				mock.ExpectQuery(testcase.query).WithArgs(username).WillReturnRows(newRows)
 			}
-			repo := repo.NewRepo(db, database.NewQueryBuilder())
+			repo := NewRepo(db, database.NewQueryBuilder())
 
 			// WHEN
 			user, err := repo.GetUser(username)
@@ -166,6 +115,72 @@ func Test_DBService_Get_User(t *testing.T) {
 					t.Errorf("error was not expected while updating stats: %s", err)
 				}
 				assert.Equal(t, testcase.user, user)
+			}
+
+			if err := mock.ExpectationsWereMet(); err != nil {
+				t.Errorf("there were unfulfilled expectations: %s", err)
+			}
+		})
+	}
+}
+
+func Test_DBService_Add_User(t *testing.T) {
+	// GIVEN
+	username := "username"
+	password := "password"
+
+	testcases := []struct {
+		name       string
+		getUserErr error
+		query      string
+		err        error
+		wantErr    bool
+	}{
+		{name: "add user successfully", getUserErr: sql.ErrNoRows, query: database.NewQueryBuilder().AddUser(), wantErr: false},
+		{name: "add user unsuccessfully", getUserErr: sql.ErrNoRows, query: database.NewQueryBuilder().AddUser(), err: errors.New("Exec Error"), wantErr: true},
+		{name: "add user unsuccessfully", getUserErr: sql.ErrConnDone, query: database.NewQueryBuilder().AddUser(), err: errors.New("Could not add user"), wantErr: true},
+	}
+
+	for _, testcase := range testcases {
+		t.Run(testcase.name, func(t *testing.T) {
+			db, mock, err := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
+			if err != nil {
+				t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+			}
+			defer db.Close()
+
+			if testcase.wantErr {
+				if testcase.getUserErr == sql.ErrNoRows {
+					mock.ExpectExec(testcase.query).WithArgs(username, password).WillReturnError(testcase.err)
+				}
+			} else {
+				mock.ExpectExec(testcase.query).WithArgs(username, password).WillReturnResult(sqlmock.NewResult(1, 1))
+			}
+
+			repo := NewRepo(db, database.NewQueryBuilder())
+
+			called := false
+			getUser = func(s *sqlRepo, username string) (*types.User, error) {
+				called = true
+				return nil, testcase.getUserErr
+			}
+
+			// WHEN
+			err = repo.AddUser(username, password)
+
+			// THEN
+			if !called {
+				t.Errorf("GetUser was not called")
+			}
+
+			if testcase.wantErr {
+				if err == nil {
+					t.Errorf("was expecting an error, but there was none")
+				}
+			} else {
+				if err != nil {
+					t.Errorf("error was not expected while updating stats: %s", err)
+				}
 			}
 
 			if err := mock.ExpectationsWereMet(); err != nil {

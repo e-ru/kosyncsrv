@@ -31,7 +31,7 @@ func Test_Auth_Service_Register_User(t *testing.T) {
 		t.Run(testcase.name, func(t *testing.T) {
 			repo := new(mocks.MockedRepo)
 			repo.On("AddUser", username, password).Return(testcase.err)
-
+			
 			// WHEN
 			authService := auth.NewAuthService(repo)
 			err, msg := authService.RegisterUser(username, password)
