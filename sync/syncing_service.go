@@ -10,8 +10,8 @@ func NewSyncingService(repo types.Repo) types.SyncingService{
 	return &syncingService{repo: repo}
 }
 
-func (s *syncingService) GetProgress(username, documentId string) (*types.DocumentPosition, error) {
-	ret, err := s.repo.GetDocumentPosition(username, documentId)
+func (s *syncingService) GetProgress(documentId, username string) (*types.DocumentPosition, error) {
+	ret, err := s.repo.GetDocumentPositionByUserId(documentId, username)
 	if err != nil {
 		return nil, err
 	}

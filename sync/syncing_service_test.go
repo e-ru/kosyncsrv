@@ -29,11 +29,11 @@ func Test_Synth_Service_Get_Progress(t *testing.T) {
 	for _, testcase := range testcases {
 		t.Run(testcase.name, func(t *testing.T) {
 			repo := new(mocks.MockedRepo)
-			repo.On("GetDocumentPosition", username, documentId).Return(testcase.docPos, testcase.err)
+			repo.On("GetDocumentPositionByUserId", documentId, username).Return(testcase.docPos, testcase.err)
 
 			// WHEN
 			syncService := sync.NewSyncingService(repo)
-			res, err := syncService.GetProgress(username, documentId)
+			res, err := syncService.GetProgress(documentId, username)
 
 			// THEN
 			repo.AssertExpectations(t)

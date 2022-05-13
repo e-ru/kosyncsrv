@@ -54,12 +54,12 @@ CREATE TABLE IF NOT EXISTS "document" (
 		{
 			name:   "DocumentExists should return correct statement",
 			expSql: "SELECT * FROM document WHERE documentid=$1 AND device_id=$2",
-			query:  queryBuilder.DocumentExists,
+			query:  queryBuilder.GetDocumentPositionByDeviceId,
 		},
 		{
 			name:   "DocumentExists should return correct statement",
-			expSql: "SELECT * FROM document WHERE document.username=$1 AND document.documentid=$2 ORDER BY document.timestamp DESC",
-			query:  queryBuilder.GetDocumentPosition,
+			expSql: "SELECT * FROM document WHERE documentid=$1 AND username=$2 ORDER BY timestamp DESC",
+			query:  queryBuilder.GetDocumentPositionByUserId,
 		},
 	}
 

@@ -59,11 +59,8 @@ func (s *sqlRepo) AddUser(username, password string) error {
 	return fmt.Errorf("Could not add User, error: %+v", err)
 }
 
-func (s *sqlRepo) GetDocumentPosition(username, documentId string) (*types.DocumentPosition, error) {
-	log.Printf("Get document position - username: %+v, documentId: %+v", username, documentId)
-
+func getDocumentPosition(s *sqlRepo, row *sql.Row) (*types.DocumentPosition, error) {
 	var docPos types.DocumentPosition
-	row := s.sqlClient.QueryRow(s.queryBuilder.GetDocumentPosition(), username, documentId)
 	err := row.Scan(
 		&docPos.Username,
 		&docPos.DocumentID,
@@ -79,7 +76,24 @@ func (s *sqlRepo) GetDocumentPosition(username, documentId string) (*types.Docum
 	return &docPos, nil
 }
 
+func (s *sqlRepo) GetDocumentPositionByUserId(documentId, username string) (*types.DocumentPosition, error) {
+	log.Printf("Get document position - username: %+v, documentId: %+v", username, documentId)
+
+	row := s.sqlClient.QueryRow(s.queryBuilder.GetDocumentPositionByUserId(), documentId, username)
+	return getDocumentPosition(s, row)
+}
+
+func (s *sqlRepo) GetDocumentPositionByDeviceId(documentId, deviceId string) (*types.DocumentPosition, error) {
+	log.Printf("Get document position - deviceId: %+v, documentId: %+v", deviceId, documentId)
+
+	row := s.sqlClient.QueryRow(s.queryBuilder.GetDocumentPositionByDeviceId(), documentId, deviceId)
+	return getDocumentPosition(s, row)
+}
+
 func (mr *sqlRepo) UpdateDocumentPosition(username string, documentPosition *types.DocumentPosition) (*int64, error) {
 	timestamp := int64(0)
+
+	
+
 	return &timestamp, nil
 }

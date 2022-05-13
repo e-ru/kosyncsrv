@@ -73,8 +73,8 @@ type QueryBuilder interface {
 	SchemaDocument() string
 	AddUser() string
 	GetUser() string
-	DocumentExists() string
-	GetDocumentPosition() string
+	GetDocumentPositionByUserId() string
+	GetDocumentPositionByDeviceId() string
 }
 
 type SqlApi interface {
@@ -87,7 +87,8 @@ type Repo interface {
 	InitDatabase() error // doesn't belong to repo...
 	AddUser(username, password string) error
 	GetUser(username string) (*User, error)
-	GetDocumentPosition(username, documentId string) (*DocumentPosition, error)
+	GetDocumentPositionByUserId(documentId, username string) (*DocumentPosition, error)
+	GetDocumentPositionByDeviceId(documentId, deviceId string) (*DocumentPosition, error)
 	UpdateDocumentPosition(username string, documentPosition *DocumentPosition) (*int64, error)
 }
 
