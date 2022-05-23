@@ -1,8 +1,12 @@
 package main
 
 import (
+	"database/sql"
 	"flag"
 	"fmt"
+	"kosyncsrv/config"
+	"kosyncsrv/database"
+	"kosyncsrv/repo"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -112,9 +116,27 @@ func updateProgress(c *gin.Context) {
 }
 
 func main() {
+	config, err := config.NewConfiguration()
+	if err != nil {
+		fmt.Printf("error reading config: %+v", err)
+	}
+	fmt.Printf("config: %+v", config)
+
+	db, err := sql.Open("sqlite3", config.DBFileName)
+	if err != nil {
+		panic(err)
+	}
+	defer db.Close()
+
+	repo := repo.NewRepo(db, database.NewQueryBuilder())
+	repo.InitDatabase()
+
+	// syncService := sync.NewSyncingService(repo)
+
+	db.Close()
 	dbfile := flag.String("d", "syncdata.db", "Sqlite3 DB file name")
 	dbname = *dbfile
-	srvhost := flag.String("t", "127.0.0.1", "Server host")
+	srvhost := flag.String("t", "192.168.188.93", "Server host")
 	srvport := flag.Int("p", 8080, "Server port")
 	sslswitch := flag.Bool("ssl", false, "Start with https")
 	sslc := flag.String("c", "", "SSL Certificate file")
@@ -137,4 +159,8 @@ func main() {
 	} else {
 		router.Run(bindsrv)
 	}
+}
+
+func DbServiceFromConfig() {
+	panic("unimplemented")
 }

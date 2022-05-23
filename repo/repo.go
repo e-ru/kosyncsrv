@@ -1,0 +1,99 @@
+package repo
+
+import (
+	"database/sql"
+	"fmt"
+	"kosyncsrv/types"
+	"log"
+)
+
+type sqlRepo struct {
+	sqlClient    types.SqlApi
+	queryBuilder types.QueryBuilder
+}
+
+func NewRepo(
+	sqlClient types.SqlApi,
+	queryBuilder types.QueryBuilder,
+) types.Repo {
+	return &sqlRepo{
+		sqlClient:    sqlClient,
+		queryBuilder: queryBuilder,
+	}
+}
+
+func (s *sqlRepo) InitDatabase() error {
+	if _, err := s.sqlClient.Exec(s.queryBuilder.SchemaUser()); err != nil {
+		return err
+	}
+	if _, err := s.sqlClient.Exec(s.queryBuilder.SchemaDocument()); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (s *sqlRepo) GetUser(username string) (*types.User, error) {
+	log.Printf("Get user: %+v", username)
+
+	var user types.User
+	row := s.sqlClient.QueryRow(s.queryBuilder.GetUser(), username)
+	if err := row.Scan(&user.Username, &user.Password); err != nil {
+		log.Printf("Get user error: %+v", err)
+		return nil, err
+	}
+	return &user, nil
+}
+
+var getUser = (*sqlRepo).GetUser
+
+func (s *sqlRepo) AddUser(username, password string) error {
+	log.Printf("Add user: %+v", username)
+
+	_, err := getUser(s, username)
+	if err == sql.ErrNoRows {
+		if _, err := s.sqlClient.Exec(s.queryBuilder.AddUser(), username, password); err != nil {
+			return fmt.Errorf("Could not add User, error: %+v", err)
+		}
+		return nil
+	}
+	return fmt.Errorf("Could not add User, error: %+v", err)
+}
+
+func getDocumentPosition(s *sqlRepo, row *sql.Row) (*types.DocumentPosition, error) {
+	var docPos types.DocumentPosition
+	err := row.Scan(
+		&docPos.Username,
+		&docPos.DocumentID,
+		&docPos.Percentage,
+		&docPos.Progress,
+		&docPos.Device,
+		&docPos.DeviceID,
+		&docPos.Timestamp,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return &docPos, nil
+}
+
+func (s *sqlRepo) GetDocumentPositionByUserId(documentId, username string) (*types.DocumentPosition, error) {
+	log.Printf("Get document position - username: %+v, documentId: %+v", username, documentId)
+
+	row := s.sqlClient.QueryRow(s.queryBuilder.GetDocumentPositionByUserId(), documentId, username)
+	return getDocumentPosition(s, row)
+}
+
+func (s *sqlRepo) GetDocumentPositionByDeviceId(documentId, deviceId string) (*types.DocumentPosition, error) {
+	log.Printf("Get document position - deviceId: %+v, documentId: %+v", deviceId, documentId)
+
+	row := s.sqlClient.QueryRow(s.queryBuilder.GetDocumentPositionByDeviceId(), documentId, deviceId)
+	return getDocumentPosition(s, row)
+}
+
+func (mr *sqlRepo) UpdateDocumentPosition(username string, documentPosition *types.DocumentPosition) (*int64, error) {
+	timestamp := int64(0)
+
+	
+
+	return &timestamp, nil
+}
